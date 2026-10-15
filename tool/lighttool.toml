@@ -1,0 +1,9 @@
+[tool]
+id          = "com.thelightphone.dictionary"
+label       = "Dictionary"
+versionCode = 4
+versionName = "1.3.0"
+permissions = ["android.permission.INTERNET"]
+orientation = "portrait"
+# Target the real Light Phone III (LightOS).
+serverPackage = "com.lightos"
