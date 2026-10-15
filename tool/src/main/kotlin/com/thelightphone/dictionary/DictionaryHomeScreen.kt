@@ -55,7 +55,7 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                                 screenFactory = { activity ->
                                     CreditsScreen(
                                         activity,
-                                        showRecents = showRecents,
+                                        showRecentsFlow = viewModel.showRecents,
                                         onToggleShowRecents = viewModel::toggleShowRecents,
                                         onClearRecents = viewModel::clearRecents,
                                     )

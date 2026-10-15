@@ -16,7 +16,7 @@ import com.thelightphone.sdk.ui.*
  */
 class CreditsScreen(
     sealedActivity: SealedLightActivity,
-    private val showRecents: Boolean = true,
+    private val showRecentsFlow: kotlinx.coroutines.flow.StateFlow<Boolean>,
     private val onToggleShowRecents: () -> Unit = {},
     private val onClearRecents: () -> Unit = {},
 ) : SimpleLightScreen<Unit>(sealedActivity) {
@@ -25,6 +25,7 @@ class CreditsScreen(
     override fun Content() {
         val themeColors by LightThemeController.colors.collectAsState()
         var confirmClear by remember { mutableStateOf(false) }
+        val showRecents by showRecentsFlow.collectAsState()
 
         LightTheme(colors = themeColors) {
             Column(
