@@ -44,18 +44,19 @@ its own pinned, sandboxed copy of the SDK. It generates `AndroidManifest.xml` fr
 so this repo intentionally contains no hand-written manifest and never sets `applicationId`,
 `versionCode`, `versionName`, or `namespace`.
 
-## Building locally
+## Install
 
-Requires JDK 17 and an Android SDK. Then:
+Download the prebuilt APK from the [GitHub Releases](https://github.com/chairmanmortimort/dictionary-light/releases) page and sideload it (with `adb install` or your file manager). No build step or Android tooling is required.
 
-```
-git submodule update --init --recursive
-./gradlew :tool:assembleDebug
-# -> tool/build/outputs/apk/debug/tool-debug.apk
-```
+- `Dictionary-1.3.0-release.apk` — minified, `arm64-v8a` only (~4 MB)
+- `Dictionary-1.3.0-debug.apk` — for testing
 
-The APK is signed with the shared Light dev keystore (from the submodule) for local sideloading.
-Light's build service re-signs with its own key.
+## Screenshots
+
+![Home](docs/screenshots/home.png)
+![Entry with pronunciation](docs/screenshots/article.png)
+![About / recents toggle](docs/screenshots/settings.png)
+![Recents expanded](docs/screenshots/recents-expanded.png)
 
 ## Privacy
 

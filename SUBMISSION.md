@@ -5,15 +5,15 @@ Light Tool Library metadata - paste into the **Add Tool** form.
 | Field | Value |
 |---|---|
 | **Title** | Dictionary |
-| **GitHub Repo** | https://github.com/<you>/dictionary-light |
+| **GitHub Repo** | https://github.com/chairmanmortimort/dictionary-light |
 | **Description** | An English dictionary for the Light Phone III, powered by Wiktionary. Search any word and read its definitions. No account, no ads, no tracking. |
 | **Tags** | Education *(provisional)* |
 
 ## Checklist
 - [x] versionCode bumped (4)
 - [x] Built with the latest light-sdk
-- [ ] Public repo created
-- [ ] >=1 screenshot added (required for approval)
+- [x] Public repo created
+- [x] >=1 screenshot added (required for approval)
 - [x] Description <= 255 chars
 
 ## Build artifact
