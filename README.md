@@ -14,8 +14,6 @@ and `LightViewModel`, themed with `sdk:ui`.
 - **Recents** — your last looked-up words, collapsed under a single "Recents"
   label in the bottom-left; tap it to expand the list, tap a word to look it up
   again. Toggleable in About — turning it off hides the section entirely.
-- **Haptics** — taps give a small vibration, following the phone's system
-  haptic setting.
 
 ## Settings
 
