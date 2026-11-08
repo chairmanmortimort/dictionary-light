@@ -2,7 +2,8 @@ package com.thelightphone.dictionary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
+import com.thelightphone.sdk.rememberKeyboardOptions
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,6 +11,7 @@ import com.thelightphone.sdk.InitialScreen
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.*
+
 
 @InitialScreen
 class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
@@ -32,7 +34,7 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
         val recentWords by viewModel.recentWords.collectAsState()
         val showRecents by viewModel.showRecents.collectAsState()
 
-        val searchState = rememberTextFieldState("")
+        val searchState = remember { TextFieldState("") }
         val kbFlow = rememberKeyboardOptions()
         var recentsExpanded by remember { mutableStateOf(false) }
 
@@ -49,11 +51,14 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                     state = searchState,
                     keyboardOptionsFlow = kbFlow,
                     onSubmit = { result: CharSequence ->
+                        _lastQuery = result.toString().trim()
                         viewModel.search(result.toString().trim())
                     },
                     onBack = { /* stay on this screen */ },
+                    submitIcon = LightIcons.SEARCH,
+                    singleLine = true,
                     modifier = Modifier
-                        .fillMaxSize()
+                        .height(4f.gridUnitsAsDp())
                         .background(LightThemeTokens.colors.background),
                 )
 
@@ -105,10 +110,10 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
 
                 // "Found" — entry shown in place, no settings icon.
                 if (state is DictState.Found) {
-                    val r = state.result
+                    val r = (state as DictState.Found).result
                     LightScrollView(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .weight(1f)
                             .padding(horizontal = 1f.gridUnitsAsDp()),
                     ) {
                         LightText(
@@ -190,7 +195,7 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
 
                 // Error screen
                 if (state is DictState.Error) {
-                    LightText(text = state.message, variant = LightTextVariant.Copy)
+                    LightText(text = (state as DictState.Error).message, variant = LightTextVariant.Copy)
                 }
 
                 // Settings icon — bottom-left (where native LightOS tools place it).
@@ -209,7 +214,7 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                                 },
                             )
                         })
-                        .align(Alignment.BottomStart),
+                        .align(Alignment.Start),
                     contentDescription = "Settings",
                 )
 
