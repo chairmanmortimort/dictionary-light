@@ -47,19 +47,36 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                 // Search editor — title states the action ("Search"), the field is
                 // the primary interaction. No separate "Tap to search" screen.
                 LightTextInputEditor(
-                    title = "Search",
+                    title = "Search Dictionary",
                     state = searchState,
                     keyboardOptionsFlow = kbFlow,
                     onSubmit = { result: CharSequence ->
-                        _lastQuery = result.toString().trim()
-                        viewModel.search(result.toString().trim())
+                        val q = result.toString().trim()
+                        if (q.isNotBlank()) {
+                            _lastQuery = q
+                            viewModel.search(q)
+                        }
                     },
                     onBack = { /* stay on this screen */ },
                     submitIcon = LightIcons.SEARCH,
                     singleLine = true,
-                    modifier = Modifier
-                        .height(4f.gridUnitsAsDp())
-                        .background(LightThemeTokens.colors.background),
+                    leftBottomBarItem = LightBarButton.LightIcon(
+                        icon = LightIcons.SETTINGS,
+                        onClick = {
+                            navigateTo(
+                                screenFactory = { activity ->
+                                    CreditsScreen(
+                                        activity,
+                                        showRecentsFlow = viewModel.showRecents,
+                                        onToggleShowRecents = viewModel::toggleShowRecents,
+                                        onClearRecents = viewModel::clearRecents,
+                                    )
+                                },
+                            )
+                        },
+                        contentDescription = "Settings",
+                    ),
+                    modifier = Modifier.fillMaxSize(),
                 )
 
                 // "Looking up" — larger font, no settings icon.
@@ -198,55 +215,6 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                     LightText(text = (state as DictState.Error).message, variant = LightTextVariant.Copy)
                 }
 
-                // Settings icon — bottom-left (where native LightOS tools place it).
-                LightIcon(
-                    icon = LightIcons.SETTINGS,
-                    modifier = Modifier
-                        .lightClickable(onClick = {
-                            navigateTo(
-                                screenFactory = { activity ->
-                                    CreditsScreen(
-                                        activity,
-                                        showRecentsFlow = viewModel.showRecents,
-                                        onToggleShowRecents = viewModel::toggleShowRecents,
-                                        onClearRecents = viewModel::clearRecents,
-                                    )
-                                },
-                            )
-                        })
-                        .align(Alignment.Start),
-                    contentDescription = "Settings",
-                )
-
-                // Recents — bottom-left, all-caps RECENTS (fully capitalized per
-                // the tool library style guide).
-                if (showRecents) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 2f.gridUnitsAsDp(), end = 2f.gridUnitsAsDp(), bottom = 2f.gridUnitsAsDp()),
-                    ) {
-                        LightText(
-                            text = "RECENTS",
-                            variant = LightTextVariant.Subheading,
-                            modifier = Modifier.lightClickable {
-                                recentsExpanded = !recentsExpanded
-                            },
-                        )
-                        if (recentsExpanded) {
-                            recentWords.forEach { word ->
-                                LightText(
-                                    text = word,
-                                    variant = LightTextVariant.Detail,
-                                    lighten = true,
-                                    modifier = Modifier
-                                        .padding(vertical = 0.5f.gridUnitsAsDp())
-                                        .lightClickable { openRecent(word) },
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
     }
