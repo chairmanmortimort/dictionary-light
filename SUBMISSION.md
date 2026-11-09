@@ -11,7 +11,7 @@ Light Tool Library metadata - paste into the **Add Tool** form.
 
 ## Checklist
 - [x] versionCode bumped (4)
-- [x] Built with the latest light-sdk
+- [x] Built with the latest `light-sdk` gitlink — `8d3238c` (the `v0.2.3` release tag; `sdkVersion=0.2.3` in `gradle.properties`)
 - [x] Public repo created
 - [x] >=1 screenshot added (required for approval)
 - [x] Description <= 255 chars

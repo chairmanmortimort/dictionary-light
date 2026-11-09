@@ -46,8 +46,17 @@ so this repo intentionally contains no hand-written manifest and never sets `app
 
 Download the prebuilt APK from the [GitHub Releases](https://github.com/chairmanmortimort/dictionary-light/releases) page and sideload it (with `adb install` or your file manager). No build step or Android tooling is required.
 
-- `Dictionary-1.3.2-release.apk` — minified, `arm64-v8a` only (~4 MB)
-- `Dictionary-1.3.2-debug.apk` — for testing
+- `Dictionary-1.3.3-release.apk` — minified, `arm64-v8a` only (~4 MB)
+- `Dictionary-1.3.3-debug.apk` — for testing
+
+## Notes
+
+- **SDK pin (`light-sdk` gitlink):** `8d3238c` — the `v0.2.3` release tag (latest
+  published SDK). The gitlink and `sdkVersion` in `gradle.properties` must stay
+  aligned. Submissions pinned to older commits were rejected with *"The requested
+  SDK version is below the minimum or has no supported builder image. Step: Build
+  — resolve and pull SDK builder"*; pinning to `v0.2.3` resolves that (verified:
+  compiles/assembles clean).
 
 ## Screenshots
 
