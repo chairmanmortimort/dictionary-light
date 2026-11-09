@@ -208,6 +208,60 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                     }
                 }
 
+                is DictState.Recents -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(LightThemeTokens.colors.background),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            LightTopBar(
+                                leftButton = LightBarButton.LightIcon(
+                                    icon = LightIcons.BACK,
+                                    onClick = { viewModel.clear() },
+                                    contentDescription = "Back",
+                                ),
+                                center = LightTopBarCenter.Text("Recents"),
+                                modifier = Modifier.padding(bottom = 0.25f.gridUnitsAsDp()),
+                            )
+                            if (recentWords.isEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    LightText(
+                                        text = "No recents yet.",
+                                        variant = LightTextVariant.Copy,
+                                        lighten = true,
+                                    )
+                                }
+                            } else {
+                                LightScrollView(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 1f.gridUnitsAsDp()),
+                                ) {
+                                    recentWords.forEach { word ->
+                                        LightText(
+                                            text = word,
+                                            variant = LightTextVariant.Copy,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .lightClickable { openRecent(word) }
+                                                .padding(vertical = 0.75f.gridUnitsAsDp()),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 else -> {
                     Box(
                         modifier = Modifier
@@ -248,30 +302,18 @@ class DictionaryHomeScreen(private val sealedActivity: SealedLightActivity) :
                             modifier = Modifier.fillMaxSize(),
                         )
 
-                        // Recents — all-caps RECENTS text button (expandable).
-                        if (showRecents && recentWords.isNotEmpty()) {
+                        // Recents — icon in bottom right (opens dedicated recents page).
+                        if (showRecents) {
                             Column(
                                 modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .padding(start = 2f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
+                                    .align(Alignment.BottomEnd)
+                                    .padding(end = 2f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
                             ) {
-                                LightText(
-                                    text = "RECENTS",
-                                    variant = LightTextVariant.Subheading,
-                                    modifier = Modifier.clickable(onClick = { recentsExpanded = !recentsExpanded }),
+                                LightIcon(
+                                    icon = LightIcons.LIST,
+                                    modifier = Modifier.clickable(onClick = { viewModel.showRecentsScreen() }),
+                                    contentDescription = "Recents",
                                 )
-                                if (recentsExpanded) {
-                                    recentWords.forEach { word ->
-                                        LightText(
-                                            text = word,
-                                            variant = LightTextVariant.Detail,
-                                            lighten = true,
-                                            modifier = Modifier
-                                                .padding(vertical = 0.5f.gridUnitsAsDp())
-                                                .clickable(onClick = { openRecent(word) }),
-                                        )
-                                    }
-                                }
                             }
                         }
                     }
