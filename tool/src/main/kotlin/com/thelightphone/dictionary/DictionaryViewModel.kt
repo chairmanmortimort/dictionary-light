@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -36,6 +39,7 @@ sealed interface DictState {
     data object Empty : DictState
     data class Found(val result: DictResult) : DictState
     data class Error(val message: String) : DictState
+    data object Recents : DictState
 }
 
 private const val MAX_RECENT = 10
@@ -72,34 +76,64 @@ class DictionaryViewModel(
         }
     }
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     fun search(query: String) {
         val trimmed = query.trim()
         if (trimmed.isBlank()) {
-            _state.value = DictState.Empty
+            mainHandler.post { _state.value = DictState.Empty }
             return
         }
-        _state.value = DictState.Loading
-        // Run the network fetch on a plain background thread (don't rely on
-        // viewModelScope dispatchers — they can keep this on the main thread
-        // and trigger an ANR).
+        mainHandler.post { _state.value = DictState.Loading }
         Thread {
             try {
                 val result = fetchWiktionary(trimmed)
-                _state.value = if (result != null) {
-                    DictState.Found(result)
-                } else {
-                    DictState.Empty
+                mainHandler.post {
+                    _state.value = if (result != null) {
+                        DictState.Found(result)
+                    } else {
+                        DictState.Empty
+                    }
                 }
                 if (result != null) addRecent(trimmed)
             } catch (e: Exception) {
                 Log.e("DictFetch", "lookup failed for '$trimmed'", e)
-                _state.value = DictState.Error("Could not reach Wiktionary. Check your connection.")
+                mainHandler.post {
+                    _state.value = DictState.Error("Could not reach Wiktionary. Check your connection.")
+                }
             }
         }.start()
     }
 
+    fun showRecentsScreen() {
+        _state.value = DictState.Recents
+    }
+
     fun clear() {
         _state.value = DictState.Empty
+    }
+
+    fun searchSynonym(word: String) {
+        val trimmed = word.trim()
+        if (trimmed.isBlank()) return
+        Thread {
+            try {
+                // Try the full phrase first, then fall back to the first word.
+                var result = fetchWiktionary(trimmed)
+                if (result == null && trimmed.contains(' ')) {
+                    result = fetchWiktionary(trimmed.substringBefore(' '))
+                }
+                if (result != null) {
+                    mainHandler.post {
+                        _state.value = DictState.Found(result)
+                    }
+                    addRecent(trimmed)
+                }
+                // If not found, stay on the current page (don't go to home).
+            } catch (e: Exception) {
+                Log.e("DictFetch", "synonym lookup failed for '$trimmed'", e)
+            }
+        }.start()
     }
 
     // === Recents ===
@@ -247,12 +281,28 @@ class DictionaryViewModel(
                     }
                     continue
                 } else if (level >= 3 && inEnglish) {
+                    // Skip etymology section headers (e.g. "Etymology 1", "Etymology 2")
+                    // — they are not parts of speech. Wait for the actual POS header.
+                    if (header.lowercase().contains("etymology")) {
+                        flushSection()
+                        currentPos = null
+                        inPronunciation = false
+                        inSynonyms = false
+                        inAntonyms = false
+                        continue
+                    }
                     inPronunciation = header.equals("Pronunciation", ignoreCase = true)
                     inSynonyms = header.equals("Synonyms", ignoreCase = true)
                     inAntonyms = header.equals("Antonyms", ignoreCase = true)
-                    // Only level-3 headers start a new part-of-speech section; deeper
-                    // headers (====Comparative====) are inflection sub-lists, not POS.
+                    // Level-3 headers start a new part-of-speech section.
                     if (level == 3 && !inPronunciation && !inSynonyms && !inAntonyms &&
+                        header.lowercase() !in NON_GLOSS_HEADERS
+                    ) {
+                        flushSection()
+                        currentPos = header
+                    }
+                    // Level-4 headers (====Noun====, ====Verb====) are sub-section POS labels.
+                    if (level == 4 && !inPronunciation && !inSynonyms && !inAntonyms &&
                         header.lowercase() !in NON_GLOSS_HEADERS
                     ) {
                         flushSection()
@@ -282,7 +332,14 @@ class DictionaryViewModel(
                     !trimmed.startsWith("*:")
                 ) {
                     val item = cleanWiki(trimmed.removePrefix("*").trim())
-                    if (item.isNotBlank()) (if (inSynonyms) syns else ants).add(item)
+                    if (item.isNotBlank()) {
+                        // Split comma/semicolon-separated synonym/antonym lists into
+                        // individual words so each is independently tappable.
+                        item.split(',', ';')
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() }
+                            .forEach { (if (inSynonyms) syns else ants).add(it) }
+                    }
                 }
                 continue
             }
@@ -295,7 +352,9 @@ class DictionaryViewModel(
                         val parts = tm.groupValues[1].split('|').map { it.trim() }
                         val words = parts.drop(1)
                             .filter { it.isNotBlank() && ":" !in it && !it.lowercase().startsWith("thesaurus") }
-                            .map { it.substringBefore('<') }
+                            .map { it.substringBefore('<').substringBefore('#').substringBefore('(').trim() }
+                            .filter { it.isNotBlank() }
+                            .distinct()
                         if (kind.startsWith("syn")) syns.addAll(words) else ants.addAll(words)
                     }
                 }
@@ -352,6 +411,9 @@ class DictionaryViewModel(
         }
         // Remove ''' bold markers, then '' italic markers.
         result = result.replace("'''", "").replace("''", "")
+        // Strip <ref>...</ref> tags (and any dangling <ref .../>).
+        result = result.replace(Regex("""(?s)<ref[^>]*>.*?</ref>"""), "")
+        result = result.replace(Regex("""<ref[^>]*/>"""), "")
         // Remove [[ ... ]] wikilinks, keeping the display text if present.
         result = result.replace(Regex("""\[\[[^\]]*\|([^\]]*)\]\]"""), "$1")
         result = result.replace(Regex("""\[\[([^\]]*)\]\]"""), "$1")
