@@ -17,7 +17,7 @@ and `LightViewModel`, themed with `sdk:ui`.
 
 ## Settings
 
-Accessed via the gear icon on the home screen. Toggle Show recents on or off;
+Accessed via the gear icon in the bottom-left of the home screen. Toggle Show recents on or off;
 clear your recent words list (tap once to arm, again to confirm). The About
 page carries full attribution (definitions license, data source, tool).
 
@@ -46,8 +46,8 @@ so this repo intentionally contains no hand-written manifest and never sets `app
 
 Download the prebuilt APK from the [GitHub Releases](https://github.com/chairmanmortimort/dictionary-light/releases) page and sideload it (with `adb install` or your file manager). No build step or Android tooling is required.
 
-- `Dictionary-1.3.0-release.apk` — minified, `arm64-v8a` only (~4 MB)
-- `Dictionary-1.3.0-debug.apk` — for testing
+- `Dictionary-1.3.2-release.apk` — minified, `arm64-v8a` only (~4 MB)
+- `Dictionary-1.3.2-debug.apk` — for testing
 
 ## Screenshots
 
